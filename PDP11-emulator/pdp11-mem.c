@@ -14,5 +14,14 @@ void w_write(Address addr, byte b);
 word w_write(Address addr);
 
 int main() {
+	byte b0 = 0xa0;
+	b_write(2, b0);
+
+	byte b_res = b_read(2);
+
+	printf("%hhx = %hhx\n", b0, b_res);
+
+
+
 	return 0;
 }
