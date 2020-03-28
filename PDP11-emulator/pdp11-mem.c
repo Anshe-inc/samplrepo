@@ -13,3 +13,6 @@ byte b_read(Address addr);
 void w_write(Address addr, byte b);
 word w_write(Address addr);
 
+int main() {
+	return 0;
+}
