@@ -1,39 +1,8 @@
-#include <stdio.h>
-#include <assert.h>
+#include "main.h"
 
-typedef char byte;				//8-bit
-typedef unsigned short word;	//16-bit
-typedef word Address;			//16-bit
 
-#define MEMSIZE (64*1024)
-
-byte mem[MEMSIZE];
-
-void b_write(Address addr, byte b);
-byte b_read(Address addr);
-void w_write(Address addr, word b);
-word w_read(Address addr);
-
-void testing() {
-	byte b0 = 0xa0;									//b0 = decimal(160)
-	b_write(2, b0);									//write to address 0x2
-
-	byte b_res = b_read(2);							//read from address 0x2
-
-	printf("%02hhx = %02hhx\n", b0, b_res);			//print the result and compare
-
-	//tests for words
-	Address a = 4;
-	b0 = 0x0a;
-	byte b1 = 0x0b;
-	word b = 0x0b0a;
-	b_write(a, b0);
-	b_write(a + 1, b1);
-	word w_res = w_read(a);
-	printf("word/bytes \t %04hx = %02hhx%02hhx\n", w_res, b1, b0);
-	assert(w_res == b);
-}
 int main(){
+	test_load();
 	testing();
 	return 0;
 }
@@ -43,8 +12,40 @@ void b_write(Address addr, byte b) {				//writes b to addr address
 	return;
 }
 byte b_read(Address addr) {							//reads from addr address
-	return mem[addr];
+	return *((byte*)(mem + addr));
 }
 word w_read(Address addr) {
-	return *((word*)(mem + addr));
+	if(addr % 2 == 0)
+		return *((word*)(mem + addr));
+	else {
+		assert(addr % 2 == 0);
+	}
+	return NULL;
+}
+
+void w_write(Address addr, word b) {
+	if (addr % 2 == 0)
+		*((word*)(mem + addr)) = b;
+	else {
+		assert(addr % 2 == 0);
+	}
+}
+
+
+void load_file() {
+	Address mem_addr = 0x0000;
+	word N = 0x0000;
+
+	byte inp = 0x00;
+	word i;
+
+	while (scanf("%4hx %4hx", &mem_addr, &N) > 1) {
+		printf("%x = %d, %x = %d\n", mem_addr, mem_addr, N, N);
+		for (i = 0x0000; i < N; i++) {
+			printf("%x ", i);
+			scanf("%2hhx", &inp);
+			printf("%02hhx\n", inp);
+			b_write(mem_addr + i, inp);
+		}
+	}
 }
