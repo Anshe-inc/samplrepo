@@ -2,15 +2,19 @@
 
 
 //this is for tests
-void test_load() {
-	load_file();
-	for (int i = 0; i < 100; i++) {
-		printf("%02hhx\t", b_read(0x0200 + i));
-		if (i % 100 == 0)
-			printf("\n\n");
-		if (i % 1000 == 0)
-			printf("\n");
+void test_load(const char* filename) {
+	load_file(filename);
+	dump(0x0200, 0x000a);
+	dump(0x0400, 0x0002);
+}
+
+void dump(Address add, word N){
+	word i;
+	printf("\nDumping data from 0x%04hx(%d) with 0x%04hx(%d) bytes\n", add, add, N, N);
+	for (i = 0; i < N; i++) {
+		printf("%02hhx\t", b_read(add + i));
 	}
+	printf("\n");
 }
 void testing() {
 	byte b0 = 0xa0;									//b0 = decimal(160)
