@@ -1,8 +1,14 @@
 #include "main.h"
+#include "test.h"
 
 
-int main(){
-	test_load();
+int main(int argc, char * argv[]){
+	if(argc > 1){									//tests if path was written
+		test_load(argv[1]);							//in command line(not correct)
+	}
+	else{
+		assert(argc > 1);
+	}
 	testing();
 	return 0;
 }
@@ -16,36 +22,36 @@ byte b_read(Address addr) {							//reads from addr address
 }
 word w_read(Address addr) {
 	if(addr % 2 == 0)
-		return *((word*)(mem + addr));
+		return *((word*)(mem + addr)); 
 	else {
 		assert(addr % 2 == 0);
 	}
-	return NULL;
+	return -1;
 }
 
 void w_write(Address addr, word b) {
 	if (addr % 2 == 0)
-		*((word*)(mem + addr)) = b;
+		(*((word*)(mem + addr))) = b;
 	else {
 		assert(addr % 2 == 0);
 	}
 }
 
 
-void load_file() {
+void load_file(const char* filename) {
 	Address mem_addr = 0x0000;
 	word N = 0x0000;
 
 	byte inp = 0x00;
 	word i;
-
-	while (scanf("%4hx %4hx", &mem_addr, &N) > 1) {
-		printf("%x = %d, %x = %d\n", mem_addr, mem_addr, N, N);
+	
+	FILE* fin = fopen(filename, "r");
+	
+	while (fscanf(fin ,"%4hx %4hx", &mem_addr, &N) > 1) {
 		for (i = 0x0000; i < N; i++) {
-			printf("%x ", i);
-			scanf("%2hhx", &inp);
-			printf("%02hhx\n", inp);
+			fscanf(fin ,"%2hhx", &inp);
 			b_write(mem_addr + i, inp);
 		}
 	}
+	fclose(fin);
 }
