@@ -1,4 +1,5 @@
-#include <varargs.h>
+#include "main.h"
+#include <stdarg.h>
 
 
 #define ERROR 0
@@ -7,9 +8,9 @@
 #define DEBUG 3
 
 
-void info();
-void error();
-void trace();
-void debug();
+void info(const char* txt, ...);
+void error(const char* txt, ...);
+void trace(const char* txt, ...);
+void debug(const char* txt, ...);
 
-void log()
+void logging(const char* txt, ...);
