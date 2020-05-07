@@ -4,17 +4,19 @@
 //this is for tests
 void test_load(const char* filename) {
 	load_file(filename);
-	dump(0x0200, 0x000a);
-	dump(0x0400, 0x0002);
+	//dump(0x0200, 0x000c);
+	run();
+	
+	//dump(0x0200, 0x000c);
 }
 
 void dump(Address add, word N){
 	word i;
-	printf("\nDumping data from 0x%04hx(%d) with 0x%04hx(%d) bytes\n", add, add, N, N);
+	trace("\nDumping data from 0x%04hx(%d) with 0x%04hx(%d) bytes\n", add, add, N, N);
 	for (i = 0; i < N; i++) {
-		printf("%02hhx\t", b_read(add + i));
+		trace("%02hhx\t", b_read(add + i));
 	}
-	printf("\n");
+	trace("\n");
 }
 void testing() {
 	byte b0 = 0xa0;									//b0 = decimal(160)
@@ -22,7 +24,7 @@ void testing() {
 
 	byte b_res = b_read(2);							//read from address 0x2
 	assert(b0 == b_res);
-	printf("%02hhx = %02hhx\n", b0, b_res);			//print the result and compare
+	trace("%02hhx = %02hhx\n", b0, b_res);			//print the result and compare
 
 	//tests for words
 	Address a = 4;
@@ -32,6 +34,6 @@ void testing() {
 	b_write(a, b0);
 	b_write(a + 1, b1);
 	word w_res = w_read(a);
-	printf("word/bytes \t %04hx = %02hhx%02hhx\n", w_res, b1, b0);
+	trace("word/bytes \t %04hx = %02hhx%02hhx\n", w_res, b1, b0);
 	assert(w_res == b);
 }
