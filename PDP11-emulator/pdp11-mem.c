@@ -1,10 +1,13 @@
 #include "main.h"
+#include "logging.h"
 #include "test.h"
 
 
+byte mem[MEMSIZE];
+
 int main(int argc, char * argv[]){
 	if(argc > 1){									//tests if path was written
-		test_load(argv[1]);							//in command line(not correct)
+		test_load(argv[1]);							//to command line(not correct)
 	}
 	else{
 		assert(argc > 1);
@@ -30,6 +33,7 @@ word w_read(Address addr) {
 }
 
 void w_write(Address addr, word b) {
+	trace("\naddr for w_read=%06o\n", addr);
 	if (addr % 2 == 0)
 		(*((word*)(mem + addr))) = b;
 	else {
