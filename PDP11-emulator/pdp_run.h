@@ -1,9 +1,9 @@
 #include "main.h"
 
 
-#define NO_PARAMS 0
+#define NO_PARAMS 0			//for 'byte params'
 #define HAS_DD 1
-#define HaS_SS 2
+#define HAS_SS 2
 
 
 
@@ -23,7 +23,8 @@ typedef struct{
 
 typedef struct{
 	word addr;				//arg addr
-	word val;				//arg value
+	word val;
+	byte mode;//arg value
 } Arg;
 
 Arg get_mr(word w);

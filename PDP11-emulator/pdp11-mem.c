@@ -20,7 +20,7 @@ void b_write(Address addr, byte b) {				//writes b to addr address
 	mem[addr] = b;
 	return;
 }
-byte b_read(Address addr) {							//reads from addr address
+byte b_read(Address addr) {							// reads from addr address
 	return *((byte*)(mem + addr));
 }
 word w_read(Address addr) {
@@ -32,8 +32,7 @@ word w_read(Address addr) {
 	return -1;
 }
 
-void w_write(Address addr, word b) {
-	trace("\naddr for w_read=%06o\n", addr);
+void w_write(Address addr, word b) {				// writes to addr b word
 	if (addr % 2 == 0)
 		(*((word*)(mem + addr))) = b;
 	else {
@@ -42,8 +41,8 @@ void w_write(Address addr, word b) {
 }
 
 
-void load_file(const char* filename) {
-	Address mem_addr = 0x0000;
+void load_file(const char* filename) {				// loads .o files which
+	Address mem_addr = 0x0000;						// contains only byte info
 	word N = 0x0000;
 
 	byte inp = 0x00;

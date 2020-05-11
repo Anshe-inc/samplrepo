@@ -7,14 +7,14 @@ word reg[REGSIZE];
 
 Arg ss, dd;
 
-Command com[] = {
-	{ 0170000, 0010000, "mov", do_mov },
-	{ 0170000, 0060000, "add", do_add },
-	{ 0007700, 0005200, "inc", do_inc },
-	{ 0xffff, 0000000, "halt", do_halt }
+Command com[] = {									//contains all info about operators
+	{ 0170000, 0010000, "mov", do_mov, HAS_DD | HAS_SS },
+	{ 0170000, 0060000, "add", do_add, HAS_DD | HAS_SS },
+	{ 0007700, 0005200, "inc", do_inc, HAS_DD },
+	{ 0xffff, 0000000, "halt", do_halt, 0 }
 };
 
-void run(){	
+void run(){											//test run(bad)
 	pc = 01000;
 	word w;
 	word i;
@@ -54,28 +54,20 @@ void run(){
 
 void do_halt(){
 	trace("halt");
-	byte i;
 	trace("\n---------------- halted ---------------\n");
-	for(i = 0; i < REGSIZE; i+=2){
-		if(i == 6){
-			trace("sp=%06o\n", reg[i]);
-			i = -1;
-		}
-		else if(i == 7){
-			trace("pc=%06o\n", reg[i]);
-		}
-		else{
-			trace("r%o=%06o\t", i, reg[i]);
-		}
-	}
-	//dump(0x0,0xc);
+	dump_reg();
+	dump(0x0200, 0x000c);
+	dump(0x0, 0x0008);
 	exit(0);
 }
 
 
 void do_mov(){
 	reg[dd.addr] = ss.val;
-	w_write(dd.addr, ss.val);	
+	if(dd.mode == 0){							//checks b mode
+		trace("\n%1d_write(%06o, %06o)\n",dd.mode, dd.addr, ss.val);
+		w_write(dd.addr, ss.val);
+	}
 }
 
 
@@ -99,10 +91,11 @@ Arg get_mr(word w){
 	byte regist = w & 0007;			// reg number
 	byte mode = (w >> 3) & 7;		// mode number
 	byte is_byte = (w >> 16) & 1;
-	
+	res.mode = is_byte;
 	
 	switch(mode){
 		case 0:					// Rx
+			res.mode = 1;
 			res.addr = regist;
 			res.val = reg[regist];
 			trace(" R%o ", regist);

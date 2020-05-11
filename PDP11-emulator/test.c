@@ -2,22 +2,12 @@
 
 
 //this is for tests
-void test_load(const char* filename) {
+void test_load(const char* filename) {			//tests loading file to memory
 	load_file(filename);
 	//dump(0x0200, 0x000c);
 	run();
-	
-	//dump(0x0200, 0x000c);
 }
 
-void dump(Address add, word N){
-	word i;
-	trace("\nDumping data from 0x%04hx(%d) with 0x%04hx(%d) bytes\n", add, add, N, N);
-	for (i = 0; i < N; i++) {
-		trace("%02hhx\t", b_read(add + i));
-	}
-	trace("\n");
-}
 void testing() {
 	byte b0 = 0xa0;									//b0 = decimal(160)
 	b_write(2, b0);									//write to address 0x2
