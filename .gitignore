@@ -5,3 +5,5 @@
 test
 *.out
 Debug/
+test
+out
