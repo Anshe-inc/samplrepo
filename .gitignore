@@ -1,9 +1,7 @@
 *.v*
-
 *.s*
 *.exe
 test
 *.out
 Debug/
-test
 out
