@@ -4,10 +4,22 @@
 extern word reg[];
 
 void info(const char* txt, ...){			//just for compiler
-	printf(txt);
+	va_list ap;
+	
+	va_start(ap, format);
+	
+	vfprintf(stdout,format, ap);
+	
+	va_end(ap);
 }
 void error(const char* txt, ...){			//just for compiler
-	printf(txt);
+	va_list ap;
+	
+	va_start(ap, format);
+	
+	vfprintf(stderr,format, ap);
+	
+	va_end(ap);
 }
 
 void trace(const char * format, ...){		//here's a trace func
@@ -22,7 +34,13 @@ void trace(const char * format, ...){		//here's a trace func
 
 
 void debug(const char* txt, ...){			//just for compiler
-	printf(txt);
+	va_list ap;
+	
+	va_start(ap, format);
+	
+	vfprintf(stderr,format, ap);
+	
+	va_end(ap);
 }
 
 void dump(Address add, word N){			//dumps certain amount of data
