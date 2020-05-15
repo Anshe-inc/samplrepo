@@ -197,6 +197,13 @@ Arg get_mr(word w){
 			}
 			trace(" -(R%o) ", regist);
 			break;
+		case 5:
+			reg[regist] -= 2;
+			res.addr = reg[regist];
+			res.addr = w_read(res.addr);
+			res.val = w_read(res.addr);
+			
+			trace(" @-(R%o) ");
 		default:
 			fprintf(stderr, "MODE %o NOT IMPLEMENTED YET", regist);
 			exit(1);
