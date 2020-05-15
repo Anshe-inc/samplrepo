@@ -6,3 +6,5 @@ test
 Debug/
 out
 out_b
+*_testing*
+
