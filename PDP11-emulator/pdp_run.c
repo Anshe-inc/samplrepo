@@ -10,9 +10,9 @@ Arg ss, dd, nn, r, xx;
 Command com[] = {									//contains all info about operators
 	{ 0170000, 0010000, "mov", do_mov, HAS_SS | HAS_DD },
 	{ 0170000, 0060000, "add", do_add, HAS_SS | HAS_DD },
-	{ 0077000, 0005000, "clr", do_clr, HAS_DD },
 	{ 0077000, 0077000, "sob", do_sob, HAS_R | HAS_NN },
-	{ 0007700, 0005200, "inc", do_inc, HAS_SS },
+	{ 0007700, 0005200, "inc", do_inc, HAS_DD },
+	{ 0007700, 0005000, "clr", do_clr, HAS_DD },
 	{ 0xffff, 0000000, "halt", do_halt, 0 }
 };
 
@@ -93,7 +93,7 @@ void do_mov(){
 // ADD
 void do_add(){
 	if(dd.is_byte != 1){
-		w_write(dd.addr, ss.val);
+		w_write(dd.addr, dd.val + ss.val);
 	}
 	else{
 		reg[dd.addr] += ss.val;
@@ -102,7 +102,13 @@ void do_add(){
 
 // INC
 void do_inc(){
-	reg[dd.addr] += 2 - dd.is_byte;
+	if(dd.is_byte != 1){
+		w_write(dd.addr, ++dd.val);
+	}
+	else{
+		reg[dd.addr]++;
+		b_write(dd.addr, ++dd.val);
+	}
 }
 
 // SOB
@@ -203,7 +209,8 @@ Arg get_mr(word w){
 			res.addr = w_read(res.addr);
 			res.val = w_read(res.addr);
 			
-			trace(" @-(R%o) ");
+			trace(" @-(R%o) ", regist);
+		break;
 		default:
 			fprintf(stderr, "MODE %o NOT IMPLEMENTED YET", regist);
 			exit(1);
