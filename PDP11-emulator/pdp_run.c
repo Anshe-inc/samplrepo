@@ -100,11 +100,12 @@ void do_add(){
 	}
 }
 
-
+// INC
 void do_inc(){
 	reg[dd.addr] += 2 - dd.is_byte;
 }
 
+// SOB
 void do_sob(){
 	int regist = r.addr;
 	reg[regist]--;
@@ -115,13 +116,14 @@ void do_sob(){
 		return;
 }
 
+// CLR
 void do_clr(){
 	reg[dd.addr] = 0;
 	w_write(dd.addr, 0);
 	
 }
 
-
+// it does nothing
 void do_nothing(){
 	trace("unknown");
 }
