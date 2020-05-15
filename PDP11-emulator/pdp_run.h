@@ -29,8 +29,8 @@ typedef struct{
 
 typedef struct{
 	word addr;				//arg addr
-	word val;
-	byte mode;//arg value
+	word val;				//arg value
+	byte is_byte;			//byte or word
 } Arg;
 
 Arg get_mr(word w);

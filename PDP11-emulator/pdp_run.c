@@ -10,7 +10,7 @@ Arg ss, dd, nn, r, xx;
 Command com[] = {									//contains all info about operators
 	{ 0170000, 0010000, "mov", do_mov, HAS_SS | HAS_DD },
 	{ 0170000, 0060000, "add", do_add, HAS_SS | HAS_DD },
-	{ 0077000, 0050000, "clr", do_clr, HAS_DD },
+	{ 0077000, 0005000, "clr", do_clr, HAS_DD },
 	{ 0077000, 0077000, "sob", do_sob, HAS_R | HAS_NN },
 	{ 0007700, 0005200, "inc", do_inc, HAS_SS },
 	{ 0xffff, 0000000, "halt", do_halt, 0 }
@@ -19,7 +19,7 @@ Command com[] = {									//contains all info about operators
 void run(){											//test run(bad)
 	pc = 01000;
 	word w;
-	word i, j;
+	word i;
 	word len_com = sizeof(com)/ sizeof(com[0]);
 	while(1){
 		w = w_read(pc);
@@ -65,6 +65,7 @@ void run(){											//test run(bad)
 			}
 		}
 		trace("\n");
+		//dump_reg();
 		
 	}
 }
@@ -80,28 +81,35 @@ void do_halt(){
 
 // MOV
 void do_mov(){
-	reg[dd.addr] = ss.val;
-	if(dd.mode == 0){							//checks b mode
-		trace("\n%1d_write(%06o, %06o)\n",dd.mode, dd.addr, ss.val);
+	if(dd.is_byte != 1){
 		w_write(dd.addr, ss.val);
+	}
+	else{
+		reg[dd.addr] = ss.val;
+		b_write(dd.addr, ss.val);
 	}
 }
 
 // ADD
 void do_add(){
-	reg[dd.addr] += ss.val;
+	if(dd.is_byte != 1){
+		w_write(dd.addr, ss.val);
+	}
+	else{
+		reg[dd.addr] += ss.val;
+	}
 }
 
 
 void do_inc(){
-	reg[dd.addr] += 2 - dd.mode;
+	reg[dd.addr] += 2 - dd.is_byte;
 }
 
 void do_sob(){
-	byte regist = r.val;
+	int regist = r.addr;
+	reg[regist]--;
 	if(reg[regist] != 0){
-		reg[regist]--;
-		pc = pc - 2*nn.val;
+		pc = pc - nn.val;
 	}
 	else
 		return;
@@ -109,6 +117,7 @@ void do_sob(){
 
 void do_clr(){
 	reg[dd.addr] = 0;
+	w_write(dd.addr, 0);
 	
 }
 
@@ -118,16 +127,17 @@ void do_nothing(){
 }
 
 
+// get numbers
 Arg get_mr(word w){
 	Arg res;
-	byte regist = w & 0007;			// reg number
-	byte mode = (w >> 3) & 7;		// mode number
-	byte is_byte = (w >> 16) & 1;
-	res.mode = is_byte;
+	word regist = w & 0007;			// reg number
+	word mode = (w >> 3) & 7;		// mode number
+	word is_byte = (w >> 16) & 1;
+	res.is_byte = is_byte;
 	
 	switch(mode){
 		case 0:					// Rx
-			res.mode = 1;
+			res.is_byte = 1;
 			res.addr = regist;
 			res.val = reg[regist];
 			trace(" R%o ", regist);
@@ -135,7 +145,7 @@ Arg get_mr(word w){
 		case 1:					//(Rx)
 			res.addr = reg[regist];
 			if(is_byte)
-				res.val = b_read(res.addr);
+				res.val = b_read(res.addr) && 0x00FF;
 			else
 				res.val = w_read(res.addr);
 			trace(" (R%o) ", regist);
@@ -143,12 +153,12 @@ Arg get_mr(word w){
 		case 2:					//(Rx)+
 			res.addr = reg[regist];
 			
-			if(is_byte){			//byte or word + sp & pc
-				res.val = b_read(reg[regist]);
+			if(is_byte){		//byte or word + sp & pc
+				res.val = b_read(res.addr) && 0x00FF;
 				reg[regist] += 1 + (regist > 5); //sum 2 if sp & pc
 			}
 			else{
-				res.val = w_read(reg[regist]);
+				res.val = w_read(res.addr);
 				reg[regist] += 2;
 			}
 			
@@ -159,7 +169,7 @@ Arg get_mr(word w){
 				trace(" (R%o)+ ", regist);
 			}
 			break;
-		case 3:
+		case 3:				// @(Rx)+
 			res.addr = reg[regist];
 			res.addr = w_read(res.addr);
 			res.val = w_read(res.addr);
@@ -196,16 +206,20 @@ Arg get_nn(word w){
 	Arg res;
 	word num = w & 077;
 	
-	res.val = num;
+	res.val = 2 * num;
+	
+	trace(" #%o ", pc - res.val);
 	
 	return  res;
 	
 }
 Arg get_r(word w){
 	Arg res;
-	byte num = w & 07;
+	word regist = w & 07;
 	
-	res.val = num;
+	res.addr = regist;
+	
+	trace(" R%o, ", res.addr);
 	
 	return res;
 	

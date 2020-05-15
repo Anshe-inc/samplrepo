@@ -3,7 +3,7 @@
 
 extern word reg[];
 
-void info(const char* txt, ...){			//just for compiler
+void info(const char* format, ...){			//just for compiler
 	va_list ap;
 	
 	va_start(ap, format);
@@ -12,7 +12,7 @@ void info(const char* txt, ...){			//just for compiler
 	
 	va_end(ap);
 }
-void error(const char* txt, ...){			//just for compiler
+void error(const char* format, ...){			//just for compiler
 	va_list ap;
 	
 	va_start(ap, format);
@@ -33,7 +33,7 @@ void trace(const char * format, ...){		//here's a trace func
 }
 
 
-void debug(const char* txt, ...){			//just for compiler
+void debug(const char* format, ...){			//just for compiler
 	va_list ap;
 	
 	va_start(ap, format);
@@ -68,6 +68,6 @@ void dump_reg(){
 	}
 }
 
-void logging(const char* txt, ...){			//just for compiler
-	printf(txt);
+void logging(const char* format, ...){			//just for compiler
+	printf(format);
 }

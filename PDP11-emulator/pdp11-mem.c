@@ -36,7 +36,7 @@ void w_write(Address addr, word b) {				// writes to addr b word
 	if (addr % 2 == 0)
 		(*((word*)(mem + addr))) = b;
 	else {
-		assert(addr % 2 == 0);
+		//assert(addr % 2 == 0);
 	}
 }
 
