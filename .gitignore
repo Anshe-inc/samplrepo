@@ -1,5 +1,5 @@
 *.v*
-*.s*
+*.sln
 *.exe
 test
 *.out
@@ -7,4 +7,3 @@ Debug/
 out
 out_b
 *_testing*
-
