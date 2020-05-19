@@ -1,20 +1,7 @@
-#include "main.h"
-#include "logging.h"
-#include "test.h"
+#include "pdp11-mem.h"
 
 
 byte mem[MEMSIZE];
-
-int main(int argc, char * argv[]){
-	if(argc > 1){									//tests if path was written
-		test_load(argv[1]);							//to command line(not correct)
-	}
-	else{
-		assert(argc > 1);
-	}
-	testing();
-	return 0;
-}
 
 void b_write(Address addr, byte b) {				//writes b to addr address
 	mem[addr] = b;

@@ -1,7 +1,10 @@
 #include "logging.h"
+#include "pdp11-mem.h"
 
 
 extern word reg[];
+
+byte is_traced = 1;
 
 void info(const char* format, ...){			//just for compiler
 	va_list ap;
@@ -44,7 +47,7 @@ void debug(const char* format, ...){			//just for compiler
 }
 
 void dump(Address add, word N){			//dumps certain amount of data
-	word i;
+	int i;
 	trace("\nDumping data from 0x%04hx(%d) with 0x%04hx(%d) bytes\n", add, add, N, N);
 	for (i = 0; i < N; i++) {
 		trace("%02hhx\t", b_read(add + i));
@@ -53,7 +56,7 @@ void dump(Address add, word N){			//dumps certain amount of data
 }
 
 void dump_reg(){
-	byte i;
+	int i;
 	for(i = 0; i < REGSIZE; i+=2){
 		if(i == 6){
 			trace("sp=%06o\n", reg[i]);
@@ -69,5 +72,11 @@ void dump_reg(){
 }
 
 void logging(const char* format, ...){			//just for compiler
-	printf(format);
+	va_list ap;
+	
+	va_start(ap, format);
+	
+	vfprintf(stderr,format, ap);
+	
+	va_end(ap);
 }

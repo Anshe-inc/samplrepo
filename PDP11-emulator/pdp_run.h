@@ -1,4 +1,5 @@
 #include "main.h"
+#include "pdp11-mem.h"
 
 
 #define NO_PARAMS 0			//for 'byte params'
@@ -14,8 +15,10 @@
 void do_mov();
 void do_halt();
 void do_add();
+void do_cmp();
 void do_inc();
 void do_clr();
+void do_tst();
 void do_sob();
 void do_nothing();
 

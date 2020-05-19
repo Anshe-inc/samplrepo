@@ -4,15 +4,18 @@
 
 extern byte mem;
 word reg[REGSIZE];
+byte psw = 0;				//NZVC, V = 0
 
 Arg ss, dd, nn, r, xx;
 
 Command com[] = {									//contains all info about operators
 	{ 0170000, 0010000, "mov", do_mov, HAS_SS | HAS_DD },
 	{ 0170000, 0060000, "add", do_add, HAS_SS | HAS_DD },
+	{ 0170000, 0060000, "cmp", do_cmp, HAS_SS | HAS_DD },
 	{ 0077000, 0077000, "sob", do_sob, HAS_R | HAS_NN },
 	{ 0007700, 0005200, "inc", do_inc, HAS_DD },
 	{ 0007700, 0005000, "clr", do_clr, HAS_DD },
+	{ 0007700, 0005700, "tst", do_tst, HAS_DD },
 	{ 0xffff, 0000000, "halt", do_halt, 0 }
 };
 
@@ -32,14 +35,6 @@ void run(){											//test run(bad)
 		for(i = 0; i < len_com; i++){
 			if((w & com[i].mask) == com[i].opcode){
 				trace(com[i].opname);
-				/*if(strcmp(com[i].opname, "mov") == 0){
-					ss = get_mr(w >> 6);
-					dd = get_mr(w);
-				}
-				if(strcmp(com[i].opname, "add") == 0){
-					ss = get_mr(w >> 6);
-					dd = get_mr(w);
-				}*/
 				if(com[i].params & HAS_SS){
 					ss = get_mr(w >> 6);
 				}
@@ -79,40 +74,57 @@ void do_halt(){
 	exit(0);
 }
 
-// MOV
-void do_mov(){
+
+void do_mov(){									// MOVb
 	if(dd.is_byte != 1){
 		w_write(dd.addr, ss.val);
+		psw = (ss.val >> 15) << 3 ;		// N000
 	}
 	else{
 		reg[dd.addr] = ss.val;
 		b_write(dd.addr, ss.val);
+		psw = (ss.val >> 7) << 3;		// N000
 	}
+	psw |= (ss.val == 0) << 2;		// xZ00
 }
 
-// ADD
-void do_add(){
+
+void do_add(){									// ADD
+	word a, b;
 	if(dd.is_byte != 1){
-		w_write(dd.addr, dd.val + ss.val);
+		a = dd.val;
+		b = ss.val;
+		w_write(dd.addr, a + b);				
 	}
 	else{
+		a = reg[dd.addr];
+		b = ss.val;
 		reg[dd.addr] += ss.val;
+		
 	}
+	psw = ((a+b) >> 15) << 3;			// Nxxx
+	psw |= ((a+b) == 0) << 2;		// xZxx
+	psw |= ((a != 0) && (b != 0)) && ((a >> 15) || (b >> 15));	// xxxC
 }
 
-// INC
-void do_inc(){
+
+void do_inc(){									// INC
+	word a;
 	if(dd.is_byte != 1){
+		a = dd.val;
 		w_write(dd.addr, ++dd.val);
 	}
 	else{
-		reg[dd.addr]++;
+		a = reg[dd.addr]++;
 		b_write(dd.addr, ++dd.val);
 	}
+	psw = ((a+1) < 0) << 3;			// Nxxx
+	psw |= ((a+1) == 0) << 2;			// xZxx
+	psw |= (a != 0) && ((a >> 15));		// xxxC
 }
 
-// SOB
-void do_sob(){
+
+void do_sob(){									// SOB
 	int regist = r.addr;
 	reg[regist]--;
 	if(reg[regist] != 0){
@@ -122,15 +134,21 @@ void do_sob(){
 		return;
 }
 
-// CLR
-void do_clr(){
+
+void do_clr(){									// CLR
 	reg[dd.addr] = 0;
 	w_write(dd.addr, 0);
-	
+	psw = 4;					// xZxx
 }
 
-// it does nothing
-void do_nothing(){
+void do_tst(){									// TST
+	psw &= 12;					// NZxx
+}
+
+void do_cmp(){									// CMPb
+	return;
+}
+void do_nothing(){								// it does nothing
 	trace("unknown");
 }
 
@@ -140,7 +158,7 @@ Arg get_mr(word w){
 	Arg res;
 	word regist = w & 0007;			// reg number
 	word mode = (w >> 3) & 7;		// mode number
-	word is_byte = (w >> 16) & 1;
+	word is_byte = (w >> 15) & 1;
 	res.is_byte = is_byte;
 	
 	switch(mode){

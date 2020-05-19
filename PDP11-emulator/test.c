@@ -1,4 +1,6 @@
 #include "test.h"
+#include "pdp11-mem.h"
+#include "pdp_run.h"
 
 
 //this is for tests
