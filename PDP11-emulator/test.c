@@ -6,7 +6,7 @@
 //this is for tests
 void test_load(const char* filename) {			//tests loading file to memory
 	load_file(filename);
-	dump(0x0080, 0x000c);
+	//dump(0x0080, 0x000c);
 	run();
 }
 
