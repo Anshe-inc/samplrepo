@@ -8,18 +8,30 @@
 #define HAS_NN 4
 #define HAS_R 8
 #define HAS_XX 16
+#define HAS_NZVC 32
 
 
 
 
-void do_mov();
-void do_halt();
-void do_add();
-void do_cmp();
-void do_inc();
-void do_clr();
-void do_tst();
-void do_sob();
+void do_mov();			// MOVB
+void do_halt();			// halt
+void do_add();			// ADD
+void do_cmp();			// CMP
+void do_inc();			// INCB
+void do_clr();			// CLR
+void do_sob();			// SOB
+void do_jmp();			// JMP
+void do_tst();			// TST *nzvc
+void do_cco();			// reads condition code operators *nzvc
+void do_br();			// all for branch
+void do_beq();
+void do_bne();
+void do_bmi();
+void do_bpl();
+void do_blt();
+void do_bge();
+void do_ble();			//-------
+
 void do_nothing();
 
 typedef struct{
@@ -33,11 +45,14 @@ typedef struct{
 typedef struct{
 	word addr;				//arg addr
 	word val;				//arg value
-	byte is_byte;			//byte or word
+	byte is_byte;			//byte or word and mode0(2nd bit)
 } Arg;
 
 Arg get_mr(word w);
 Arg get_nn(word w);
+Arg get_xx(word w);
 Arg get_r(word w);
+
+//void psw(Arg dd, Arg ss);
 
 void run();

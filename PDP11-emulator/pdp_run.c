@@ -5,26 +5,47 @@
 extern byte mem;
 word reg[REGSIZE];
 byte psw = 0;				//NZVC, V = 0
+byte snzvc; 				// for cco
 
+word istat = 0177560;
+word idata = 0177562;
+word ostat = 0177564;
+word odata = 0177566;
+ 
 Arg ss, dd, nn, r, xx;
 
 Command com[] = {									//contains all info about operators
 	{ 0170000, 0010000, "mov", do_mov, HAS_SS | HAS_DD },
-	{ 0170000, 0060000, "add", do_add, HAS_SS | HAS_DD },
+	{ 0170000, 0110000, "movb", do_mov, HAS_SS | HAS_DD },
+	{ 0070000, 0060000, "add", do_add, HAS_SS | HAS_DD },
 	{ 0170000, 0060000, "cmp", do_cmp, HAS_SS | HAS_DD },
 	{ 0077000, 0077000, "sob", do_sob, HAS_R | HAS_NN },
-	{ 0007700, 0005200, "inc", do_inc, HAS_DD },
+	{ 0107700, 0005200, "inc", do_inc, HAS_DD },
+	{ 0107700, 0105200, "incb", do_inc, HAS_DD },
 	{ 0007700, 0005000, "clr", do_clr, HAS_DD },
-	{ 0007700, 0005700, "tst", do_tst, HAS_DD },
+	{ 0000700, 0000100, "jmp", do_jmp, HAS_DD },
+	{ 0107700, 0005700, "tst", do_tst, HAS_DD },
+	{ 0107700, 0105700, "tstb", do_tst, HAS_DD },
+	{ 0007400, 0000400, "br", do_br, HAS_XX },
+	{ 0007400, 0001400, "beq", do_beq, HAS_XX },
+	{ 0001000, 0001000, "bne", do_bne, HAS_XX },
+	{ 0100400, 0100400, "bmi", do_bmi, HAS_XX },
+	{ 0100000, 0100000, "bpl", do_bpl, HAS_XX },
+	{ 0007400, 0002400, "blt", do_blt, HAS_XX },
+	{ 0007000, 0002000, "bge", do_bge, HAS_XX },
+	{ 0007400, 0003400, "ble", do_ble, HAS_XX },
+	{ 0000760, 0000240, "", do_cco, HAS_NZVC },
 	{ 0xffff, 0000000, "halt", do_halt, 0 }
 };
 
 void run(){											//test run(bad)
+	info("\n----------------- run ---------------\n");
 	pc = 01000;
 	word w;
 	word i;
 	word len_com = sizeof(com)/ sizeof(com[0]);
 	while(1){
+		trace("%1o%1o%1o%1o   ", psw>>3, (psw>>2) & 4,(psw>>1) & 2,psw & 1);
 		w = w_read(pc);
 		trace("%06o %06o:", pc, w);
 		pc += 2;
@@ -47,9 +68,12 @@ void run(){											//test run(bad)
 				if(com[i].params & HAS_NN){
 					nn = get_nn(w);
 				}
-				/*if(w & HAS_XX){
-					xx = get_mr(w);
-				}*/
+				if(com[i].params & HAS_NZVC){
+					snzvc = w & 037;
+				}
+				if(w & HAS_XX){
+					xx = get_xx(w);
+				}
 				com[i].do_func();
 				break;
 				
@@ -67,58 +91,64 @@ void run(){											//test run(bad)
 
 void do_halt(){
 	trace("halt");
-	trace("\n---------------- halted ---------------\n");
+	info("\n---------------- halted ---------------\n");
 	dump_reg();
-	dump(0x0200, 0x0010);
-	dump(0x0, 0x0008);
+	//dump(0x0200, 0x0010);
+	//dump(0x0, 0x0008);
 	exit(0);
 }
 
 
 void do_mov(){									// MOVb
-	if(dd.is_byte != 1){
-		w_write(dd.addr, ss.val);
-		psw = (ss.val >> 15) << 3 ;		// N000
-	}
-	else{
+	if(dd.is_byte & 2){
 		reg[dd.addr] = ss.val;
+	}
+	else if(dd.is_byte & 1){
 		b_write(dd.addr, ss.val);
 		psw = (ss.val >> 7) << 3;		// N000
 	}
-	psw |= (ss.val == 0) << 2;		// xZ00
+	else{
+		w_write(dd.addr, ss.val);
+		psw = (ss.val >> 15) << 3 ;		// N000
+	}
+	psw |= (ss.val == 0) << 2;			// xZ00
 }
 
 
 void do_add(){									// ADD
 	word a, b;
-	if(dd.is_byte != 1){
-		a = dd.val;
-		b = ss.val;
-		w_write(dd.addr, a + b);				
-	}
-	else{
+	if(dd.is_byte & 2){
 		a = reg[dd.addr];
 		b = ss.val;
 		reg[dd.addr] += ss.val;
+	}
+	else{
+		a = dd.val;
+		b = ss.val;
+		w_write(dd.addr, a + b);				
 		
 	}
 	psw = ((a+b) >> 15) << 3;			// Nxxx
-	psw |= ((a+b) == 0) << 2;		// xZxx
+	psw |= ((a+b) == 0) << 2;			// xZxx
 	psw |= ((a != 0) && (b != 0)) && ((a >> 15) || (b >> 15));	// xxxC
 }
 
 
 void do_inc(){									// INC
 	word a;
-	if(dd.is_byte != 1){
-		a = dd.val;
-		w_write(dd.addr, ++dd.val);
+	if(dd.is_byte & 2){
+		a = ++reg[dd.addr];
+	}
+			
+	if(dd.is_byte & 1){
+		b_write(dd.addr, ++dd.val);
+		psw = ((a+1) >> 7) << 3;		// Nxxx
 	}
 	else{
-		a = reg[dd.addr]++;
-		b_write(dd.addr, ++dd.val);
+		a = dd.val;
+		w_write(dd.addr, ++dd.val);
+		psw = ((a+1) >> 15) << 3;		// Nxxx
 	}
-	psw = ((a+1) < 0) << 3;			// Nxxx
 	psw |= ((a+1) == 0) << 2;			// xZxx
 	psw |= (a != 0) && ((a >> 15));		// xxxC
 }
@@ -138,15 +168,109 @@ void do_sob(){									// SOB
 void do_clr(){									// CLR
 	reg[dd.addr] = 0;
 	w_write(dd.addr, 0);
-	psw = 4;					// xZxx
+	psw = 4;									// xZxx
 }
 
 void do_tst(){									// TST
-	psw &= 12;					// NZxx
+	psw &= 12;							// NZxx
+	trace("%o", psw);
+	trace("  %o  ", dd.val);
+	if(dd.is_byte){
+		psw = (dd.val >> 7) << 3;		// Nxxx
+	}
+	else{
+		psw = (dd.val >> 15) << 3;		// Nxxx
+	}
+	psw |= (dd.val == 0) << 2;			// xZxx
 }
 
 void do_cmp(){									// CMPb
-	return;
+	word a, b, res = 0;
+	a = dd.val;
+	b = ss.val;
+	if(dd.is_byte){
+		res = reg[dd.addr] - ss.val;
+	}
+	else{
+		res = a - b;	
+	}
+	psw = ((a+b) >> 15) << 3;			// Nxxx
+	psw |= ((a+b) == 0) << 2;			// xZxx
+	psw |= ((a != 0) && (b != 0)) && ((a >> 15) || (b >> 15));	// xxxC
+}
+
+void do_cco() {
+	byte is_set = snzvc >> 4;
+	byte mask = snzvc & 0xf;
+	char cond[5] = "nzvc";
+	
+	if(mask == 0xf && is_set){
+		trace("scc");
+		psw = mask;			// NZVC = 1111
+	}
+	else if(mask == 0x0){
+		trace("nop");
+	}
+	else if(mask == 0xf){
+		trace("ccc");
+		psw = ~mask;
+	}
+	else if(is_set){
+		trace("se");
+		psw |= mask;
+	}else{
+		trace("cl");
+		psw &= ~mask;
+	}
+	
+	trace("%c",cond[(int)(3.0/mask + 0.5)]);
+	
+}
+
+void do_jmp() {
+	if(dd.is_byte & 2){
+		pc = 2*dd.addr;
+	}else{
+		pc = dd.addr;
+	}
+}
+void do_br(){
+	pc += xx.addr * 2;
+}
+void do_beq(){				// z==1
+	if(psw & 4){
+		do_br();
+	}
+}
+void do_bne(){				// z==0
+	if((psw & 4) == 0){
+		do_br();
+	}
+}
+void do_bmi(){				// n==1
+	if(psw & 8){
+		do_br();
+	}
+}
+void do_bpl(){				// n==0
+	if((psw & 8) == 0){
+		do_br();
+	}
+}
+void do_blt(){				// n^v==1
+	if((psw & 8) ^ (psw & 2)){
+		do_br();
+	}
+}
+void do_bge(){				// n^v==0
+	if(((psw & 8) ^ (psw & 2)) == 0){
+		do_br();
+	}
+}
+void do_ble(){
+	if((psw & 4) | ((psw & 8) ^ (psw & 2))){	// z|(n^v)==1
+		do_br();
+	}
 }
 void do_nothing(){								// it does nothing
 	trace("unknown");
@@ -160,10 +284,11 @@ Arg get_mr(word w){
 	word mode = (w >> 3) & 7;		// mode number
 	word is_byte = (w >> 15) & 1;
 	res.is_byte = is_byte;
+	word x;
 	
 	switch(mode){
 		case 0:					// Rx
-			res.is_byte = 1;
+			res.is_byte |= 2;	// for mode 0 only
 			res.addr = regist;
 			res.val = reg[regist];
 			trace(" R%o ", regist);
@@ -228,9 +353,21 @@ Arg get_mr(word w){
 			res.val = w_read(res.addr);
 			
 			trace(" @-(R%o) ", regist);
-		break;
+			break;
+		case 6:
+			x = w_read(pc);
+			pc += 2;
+			res.addr = x + reg[regist];
+			res.val = w_read(res.addr);
+			if(regist == 7){
+				trace(" %o ", res.addr);
+			}
+			else{
+				trace(" %o(R%o) ", x, regist);
+			}
+			break;
 		default:
-			fprintf(stderr, "MODE %o NOT IMPLEMENTED YET", regist);
+			fprintf(stderr, "MODE %o NOT IMPLEMENTED YET", mode);
 			exit(1);
 	}
 	return res;
@@ -257,4 +394,10 @@ Arg get_r(word w){
 	
 	return res;
 	
+}
+
+Arg get_xx(word w){
+	byte res = w;
+	xx.addr = res;
+	return xx;
 }
