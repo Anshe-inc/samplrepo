@@ -3,8 +3,8 @@
 
 
 extern word reg[];
+extern byte is_traced;
 
-byte is_traced = 1;
 
 void info(const char* format, ...){			//just for compiler
 	va_list ap;
@@ -26,13 +26,16 @@ void error(const char* format, ...){			//just for compiler
 }
 
 void trace(const char * format, ...){		//here's a trace func
-	va_list ap;
+	if(is_traced){
+		va_list ap;
 	
-	va_start(ap, format);
+		va_start(ap, format);
 	
-	vfprintf(stderr,format, ap);
+		vfprintf(stderr,format, ap);
 	
-	va_end(ap);
+		va_end(ap);
+	}
+	return;
 }
 
 
@@ -59,14 +62,14 @@ void dump_reg(){
 	int i;
 	for(i = 0; i < REGSIZE; i+=2){
 		if(i == 6){
-			trace("sp=%06o\n", reg[i]);
+			info("sp=%06o\n", reg[i]);
 			i = -1;
 		}
 		else if(i == 7){
-			trace("pc=%06o\n", reg[i]);
+			info("pc=%06o\n", reg[i]);
 		}
 		else{
-			trace("r%o=%06o\t", i, reg[i]);
+			info("r%o=%06o\t", i, reg[i]);
 		}
 	}
 }
